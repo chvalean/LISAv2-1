@@ -106,7 +106,6 @@
                 "[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]"
             ],
             "properties": {
-                "HyperVGenerationType": "V2",
                 "hardwareProfile": {
                     "vmSize": "[parameters('virtualMachineSize')]"
                 },
@@ -135,6 +134,9 @@
                     "computerName": "[parameters('virtualMachineName')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
+                },
+                "HyperVGenerationType": {
+                    "HyperVGenerationType": "V2"
                 },
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
