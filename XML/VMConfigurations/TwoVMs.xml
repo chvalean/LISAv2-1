@@ -309,7 +309,7 @@
         <ResourceGroup>
             <VirtualMachine>
                 <ARMInstanceSize>Standard_D15_v2</ARMInstanceSize>
-                <RoleName></RoleName>
+                <RoleName>client-vm</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -320,7 +320,7 @@
             </VirtualMachine>
             <VirtualMachine>
                 <ARMInstanceSize>Standard_D15_v2</ARMInstanceSize>
-                <RoleName></RoleName>
+                <RoleName>server-vm</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>

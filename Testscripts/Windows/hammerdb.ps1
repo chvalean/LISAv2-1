@@ -1,7 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the Apache License.
 
-param([object] $CurrentTestData, [object] $AllVmData)
+param([object] $AllVmData,
+      [object] $CurrentTestData,
+      [object] $TestProvider,
+      [string] $TestParams
+    )
 
 function Install-HammerDB {
 	Write-LogInfo "Install libmysqlclient-dev on client VM"
@@ -29,7 +33,12 @@ function Install-HammerDB {
 }
 
 function Main {
-	param ($TestParams, $AllVmData)
+    param (
+        [object] $AllVmData,
+        [object] $CurrentTestData,
+        [object] $TestProvider,
+        [string] $TestParams
+    )
 
 	$superUser = "root"
 	# Create test result
@@ -143,4 +152,5 @@ collect_VM_properties
 	return $currentTestResult
 }
 
-Main -TestParams (ConvertFrom-StringData $TestParams.Replace(";","`n")) -AllVmData $AllVmData
+Main -AllVmData $AllVmData -CurrentTestData $CurrentTestData -TestProvider $TestProvider `
+    -TestParams (ConvertFrom-StringData $TestParams.Replace(";","`n"))
