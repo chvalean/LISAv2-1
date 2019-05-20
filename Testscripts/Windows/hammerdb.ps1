@@ -6,11 +6,11 @@ param([object] $CurrentTestData, [object] $AllVmData)
 function Install-HammerDB {
 	Write-LogInfo "Install libmysqlclient-dev on client VM"
 	$cmd = ". utils.sh && update_repos && install_package libmysqlclient-dev"
-	Run-LinuxCmd -ip $serverPublicIP -port $serverSSHPort -username $username `
+	Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
 		-password $password -command $cmd -runAsSudo
 
 	# Download and install HammerDB
-	Run-LinuxCmd -ip $allVMData.PublicIP -port $allVMData.SSHPort -username $superuser `
+	Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
 		-password $password -command "wget -q ${HAMMERDB_URL}/${HAMMERDB_PACKAGE}" -ignoreLinuxExitCode | Out-Null
 	if (-not $?) {
 		Write-LogErr "Unable to download HammerDB, please check the download URL!"
@@ -18,7 +18,7 @@ function Install-HammerDB {
 		return $currentTestResult
 	}
 
-	Run-LinuxCmd -ip $allVMData.PublicIP -port $allVMData.SSHPort -username $superuser `
+	Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
 		-password $password -command "chmod 755 ./${HAMMERDB_PACKAGE} && ./${HAMMERDB_PACKAGE} --mode silent" `
 		-ignoreLinuxExitCode | Out-Null
 	if (-not $?) {
@@ -31,6 +31,7 @@ function Install-HammerDB {
 function Main {
 	param ($TestParams, $AllVmData)
 
+	$superUser = "root"
 	# Create test result
 	$resultArr = @()
 	$currentTestResult = Create-TestResultObject
@@ -99,28 +100,34 @@ cd /root/
 collect_VM_properties
 "@
 		Set-Content "$LogDir\StartMySQLSetup.sh" $install_configure_mysql
-		Copy-RemoteFiles -uploadTo $clientVMData.PublicIP -port $clientVMData.SSHPort `
-			-files "$LogDir\StartMySQLSetup.sh" -username $superUser -password $password -upload
+		Copy-RemoteFiles -uploadTo $serverVMData.PublicIP -port $serverVMData.SSHPort `
+			-files "$constantsFile,$LogDir\StartMySQLSetup.sh" -username $superUser -password $password -upload
 
-		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
+		Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
 			-username $superUser -password $password -command "chmod +x *.sh" | Out-Null
-		$testJob = Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
+		$testJob = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
 			-username $superUser -password $password -command "./StartMySQLSetup.sh" -RunInBackground
 		#endregion
 
 		#region MONITOR INSTALL CONFIGURE MySQL server
 		while ((Get-Job -Id $testJob).State -eq "Running") {
-			$currentStatus = Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
+			$currentStatus = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
 				-username $superUser -password $password -command "tail -2 mysqlConsoleLogs.txt | head -1"
 			Write-LogInfo "Current Test Status : $currentStatus"
 			Wait-Time -seconds 30
 		}
-		$mysqlStatus = Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
+
+		$mysqlStatus = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
 			-username $superUser -password $password -command "cat /root/state.txt"
 		$testResult = Get-TestStatus $mysqlStatus
+		if ($testResult -ne "PASS") {
+			Copy-RemoteFiles -downloadFrom $serverVMData.PublicIP -port $serverVMData.SSHPort `
+				-username $superUser -password $password -download -downloadTo $LogDir -files "*.txt, *.log"
+			return $testResult
+		}
 
-		Copy-RemoteFiles -downloadFrom $clientVMData.PublicIP -port $clientVMData.SSHPort `
-			-username $superUser -password $password -download -downloadTo $LogDir -files "*.txt, *.log"
+		Install-HammerDB
+
 	} catch {
 		$ErrorMessage =  $_.Exception.Message
 		$ErrorLine = $_.InvocationInfo.ScriptLineNumber
