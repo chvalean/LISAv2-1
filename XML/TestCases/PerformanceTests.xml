@@ -672,7 +672,7 @@
     <test>
         <testName>PERF-MICROBENCHMARK-HAMMERDB</testName>
         <testScript>hammerdb.ps1</testScript>
-        <setupType>TwoVM2Host</setupType>
+        <setupType>TwoVM2Disk</setupType>
         <AdditionalHWConfig>
             <Networking>SRIOV</Networking>
         </AdditionalHWConfig>
@@ -680,6 +680,7 @@
         <TestParameters>
             <param>sql_password="mysqlpwd"</param>
             <param>disk_type="raid"</param>
+            <param>filesystem="xfs"</param>
             <param>HAMMERDB_URL="HAMMERDB_URL"</param>
             <param>HAMMERDB_PACKAGE="HAMMERDB_PACKAGE"</param>
         </TestParameters>
