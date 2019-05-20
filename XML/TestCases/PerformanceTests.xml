@@ -669,4 +669,24 @@
         <Tags>gpu,benchmark</Tags>
         <Priority>2</Priority>
     </test>
+    <test>
+        <testName>PERF-MICROBENCHMARK-HAMMERDB</testName>
+        <testScript>hammerdb.ps1</testScript>
+        <setupType>TwoVM2Host</setupType>
+        <AdditionalHWConfig>
+            <Networking>SRIOV</Networking>
+        </AdditionalHWConfig>
+        <files>.\Testscripts\Linux\utils.sh,.\Testscripts\Linux\mysql_setup.sh</files>
+        <TestParameters>
+            <param>sql_password="mysqlpwd"</param>
+            <param>disk_type="raid"</param>
+            <param>HAMMERDB_URL="HAMMERDB_URL"</param>
+            <param>HAMMERDB_PACKAGE="HAMMERDB_PACKAGE"</param>
+        </TestParameters>
+        <Platform>Azure</Platform>
+        <Category>Performance</Category>
+        <Area>DATABASE</Area>
+        <Tags>database,benchmark</Tags>
+        <Priority>2</Priority>
+    </test>
 </TestCases>
