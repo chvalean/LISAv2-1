@@ -6,7 +6,7 @@ param(
 )
 
 function Install-Configure-HammerDB {
-	$schemaBuildURL = "https://github.com/chvalean/LISAv2-1/tree/hammerdb-testcase/Tools/hammerdb_schemabuild.tcl"
+	$schemaBuildURL = "https://github.com/chvalean/LISAv2-1/raw/hammerdb-testcase/Tools/hammerdb_schemabuild.tcl"
 	$schemaBuildName = "hammerdb_schemabuild.tcl"
 
 	try {
