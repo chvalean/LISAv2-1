@@ -36,9 +36,9 @@ function Install-Configure-HammerDB {
 		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
 			-password $password -command "wget -q $schemaBuildURL" -ignoreLinuxExitCode | Out-Null
 
+		$cmd = "sed -i 's/127.0.0.1/$($serverVMData.InternalIP)/g' $schemaBuildName && sed -i 's/default_password/$($TestParams.sql_password)/g' $schemaBuildName"
 		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
-			-password $password -command "sed -i 's/127.0.0.1/$($serverVMData.InternalIP)/g' $schemaBuildName" `
-			-ignoreLinuxExitCode | Out-Null
+			-password $password -command $cmd -ignoreLinuxExitCode | Out-Null
 
 		#region CONFIGURE HAMMERDB DATABASE
 		$configure_hammerdb = @"
