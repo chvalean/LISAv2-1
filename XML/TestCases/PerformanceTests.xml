@@ -681,8 +681,8 @@
             <param>sql_password="mysqlpwd"</param>
             <param>disk_type="raid"</param>
             <param>filesystem="xfs"</param>
-            <param>HAMMERDB_URL="HAMMERDB_URL"</param>
-            <param>HAMMERDB_PACKAGE="HAMMERDB_PACKAGE"</param>
+            <param>HAMMERDB_URL=HAMMERDB_URL</param>
+            <param>HAMMERDB_PACKAGE=HAMMERDB_PACKAGE</param>
         </TestParameters>
         <Platform>Azure</Platform>
         <Category>Performance</Category>

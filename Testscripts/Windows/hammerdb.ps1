@@ -1,45 +1,74 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the Apache License.
 
-param([object] $AllVmData,
-      [object] $CurrentTestData,
-      [object] $TestProvider,
-      [string] $TestParams
-    )
+param(
+    [String] $TestParams, [Object] $AllVMData
+)
 
-function Install-HammerDB {
-	Write-LogInfo "Install libmysqlclient-dev on client VM"
-	$cmd = ". utils.sh && update_repos && install_package libmysqlclient-dev"
-	Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
-		-password $password -command $cmd -runAsSudo
+function Install-Configure-HammerDB {
+	$schemaBuild = "https://github.com/chvalean/LISAv2-1/tree/hammerdb-testcase/Tools/hammerdb_schemabuild.tcl"
 
-	# Download and install HammerDB
-	Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
-		-password $password -command "wget -q ${HAMMERDB_URL}/${HAMMERDB_PACKAGE}" -ignoreLinuxExitCode | Out-Null
-	if (-not $?) {
-		Write-LogErr "Unable to download HammerDB, please check the download URL!"
-		$currentTestResult.TestResult = Get-FinalResultHeader -resultarr "ABORTED"
-		return $currentTestResult
-	}
+	try {
+		Write-LogInfo "Install libmysqlclient-dev on client VM"
+		$cmd = ". utils.sh && update_repos && install_package libmysqlclient-dev"
+		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
+			-password $password -command $cmd -runAsSudo
 
-	Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
-		-password $password -command "chmod 755 ./${HAMMERDB_PACKAGE} && ./${HAMMERDB_PACKAGE} --mode silent" `
-		-ignoreLinuxExitCode | Out-Null
-	if (-not $?) {
-		Write-LogErr "Unable to install HammerDB!"
-		$currentTestResult.TestResult = Get-FinalResultHeader -resultarr "FAILED"
-		return $currentTestResult
+		# Download and install HammerDB
+		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
+			-password $password -command "wget -q $($TestParams.hammerURL)/$($TestParams.hammerPKG)" -ignoreLinuxExitCode | Out-Null
+		if (-not $?) {
+			Write-LogErr "Unable to download HammerDB, please check the download URL!"
+			$currentTestResult.TestResult = Get-FinalResultHeader -resultarr "ABORTED"
+			return $currentTestResult
+		}
+
+		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
+			-password $password -command "chmod 755 ./$($TestParams.hammerPKG) && ./$($TestParams.hammerPKG) --mode silent" `
+			-ignoreLinuxExitCode | Out-Null
+		if (-not $?) {
+			Write-LogErr "Unable to install HammerDB!"
+			$currentTestResult.TestResult = Get-FinalResultHeader -resultarr "FAILED"
+			return $currentTestResult
+		}
+
+		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
+			-password $password -command "wget -q $schemaBuild" -ignoreLinuxExitCode | Out-Null
+
+		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
+			-password $password -command "sed -i 's/127.0.0.1/$($serverVMData.InternalIP)/g' $schemaBuild" -ignoreLinuxExitCode | Out-Null
+
+		#region CONFIGURE HAMMERDB DATABASE
+		$configure_hammerdb = @"
+cd /usr/local/HammerDB-3.1/
+./hammerdbcli <<!
+source /root/$schemaBuild
+!
+"@
+		Set-Content "$LogDir\setupDB.sh" $configure_hammerdb
+		Copy-RemoteFiles -uploadTo $clientVMData.PublicIP -port $clientVMData.SSHPort `
+			-files "$LogDir\setupDB.sh" -username $superUser -password $password -upload
+
+		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
+			-username $superUser -password $password -command "chmod +x *.sh" | Out-Null
+		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
+			-username $superUser -password $password -command "./setupDB.sh" -runMaxAllowedTime 3600 | Out-Null
+		#endregion
+		if (-not $?) {
+			Write-LogErr "Unable to load the HammerDB database in MySQL!"
+			$currentTestResult.TestResult = Get-FinalResultHeader -resultarr "FAIL"
+			return $currentTestResult
+		}
+	} catch {
+		Write-LogErr "Exception during HammerDB setup."
+		return $false
 	}
 }
 
 function Main {
     param (
-        [object] $AllVmData,
-        [object] $CurrentTestData,
-        [object] $TestProvider,
-        [string] $TestParams
+        $TestParams, $AllVMData
     )
-
 	$superUser = "root"
 	# Create test result
 	$resultArr = @()
@@ -135,7 +164,7 @@ collect_VM_properties
 			return $testResult
 		}
 
-		Install-HammerDB
+		Install-Configure-HammerDB
 
 	} catch {
 		$ErrorMessage =  $_.Exception.Message
@@ -152,5 +181,4 @@ collect_VM_properties
 	return $currentTestResult
 }
 
-Main -AllVmData $AllVmData -CurrentTestData $CurrentTestData -TestProvider $TestProvider `
-    -TestParams (ConvertFrom-StringData $TestParams.Replace(";","`n"))
+Main -TestParams (ConvertFrom-StringData $TestParams.Replace(";","`n")) -AllVMData $AllVMData
