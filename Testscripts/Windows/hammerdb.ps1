@@ -6,7 +6,8 @@ param(
 )
 
 function Install-Configure-HammerDB {
-	$schemaBuild = "https://github.com/chvalean/LISAv2-1/tree/hammerdb-testcase/Tools/hammerdb_schemabuild.tcl"
+	$schemaBuildURL = "https://github.com/chvalean/LISAv2-1/tree/hammerdb-testcase/Tools/hammerdb_schemabuild.tcl"
+	$schemaBuildName = "hammerdb_schemabuild.tcl"
 
 	try {
 		Write-LogInfo "Install libmysqlclient-dev on client VM"
@@ -33,16 +34,17 @@ function Install-Configure-HammerDB {
 		}
 
 		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
-			-password $password -command "wget -q $schemaBuild" -ignoreLinuxExitCode | Out-Null
+			-password $password -command "wget -q $schemaBuildURL" -ignoreLinuxExitCode | Out-Null
 
 		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort -username $superUser `
-			-password $password -command "sed -i 's/127.0.0.1/$($serverVMData.InternalIP)/g' $schemaBuild" -ignoreLinuxExitCode | Out-Null
+			-password $password -command "sed -i 's/127.0.0.1/$($serverVMData.InternalIP)/g' $schemaBuildName" `
+			-ignoreLinuxExitCode | Out-Null
 
 		#region CONFIGURE HAMMERDB DATABASE
 		$configure_hammerdb = @"
 cd /usr/local/HammerDB-3.1/
 ./hammerdbcli <<!
-source /root/$schemaBuild
+source $schemaBuildName
 !
 "@
 		Set-Content "$LogDir\setupDB.sh" $configure_hammerdb
