@@ -44,7 +44,7 @@ function Install-Configure-HammerDB {
 		$configure_hammerdb = @"
 cd /usr/local/HammerDB-3.1/
 ./hammerdbcli <<!
-source $schemaBuildName
+source /root/$schemaBuildName
 !
 "@
 		Set-Content "$LogDir\setupDB.sh" $configure_hammerdb
