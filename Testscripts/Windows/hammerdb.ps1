@@ -175,28 +175,28 @@ cd /root/
 collect_VM_properties
 "@
 		Set-Content "$LogDir\StarthammerdbSetup.sh" $install_configure_hammerdb
-		Copy-RemoteFiles -uploadTo $serverVMData.PublicIP -port $serverVMData.SSHPort `
-			-files "$LogDir\StarthammerdbSetup.sh" -username $superUser -password $password -upload
+		Copy-RemoteFiles -uploadTo $clientVMData.PublicIP -port $clientVMData.SSHPort `
+			-files "$constantsFile,$LogDir\StarthammerdbSetup.sh" -username $superUser -password $password -upload
 
-		Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
+		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
 			-username $superUser -password $password -command "chmod +x *.sh" | Out-Null
-		$testJob = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
+		$testJob = Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
 			-username $superUser -password $password -command "./StarthammerdbSetup.sh" -RunInBackground
 		#endregion
 
 		#region MONITOR INSTALL CONFIGURE MySQL server
 		while ((Get-Job -Id $testJob).State -eq "Running") {
-			$currentStatus = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
+			$currentStatus = Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
 				-username $superUser -password $password -command "tail -2 hammerdbConsoleLogs.txt | head -1"
 			Write-LogInfo "Current Test Status : $currentStatus"
 			Wait-Time -seconds 30
 		}
 
-		$mysqlStatus = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
+		$mysqlStatus = Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
 			-username $superUser -password $password -command "cat /root/state.txt"
 		$testResult = Get-TestStatus $mysqlStatus
 		if ($testResult -ne "PASS") {
-			Copy-RemoteFiles -downloadFrom $serverVMData.PublicIP -port $serverVMData.SSHPort `
+			Copy-RemoteFiles -downloadFrom $clientVMData.PublicIP -port $clientVMData.SSHPort `
 				-username $superUser -password $password -download -downloadTo $LogDir -files "*.txt, *.log"
 			return $testResult
 		}

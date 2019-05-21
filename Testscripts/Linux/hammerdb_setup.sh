@@ -47,8 +47,8 @@ function install_hammerdb () {
 
 	wget -q $schemaBuildURL
 
-	sed -i 's/127.0.0.1/$server/g' $schemaBuildName
-	sed -i 's/default_password/$($TestParams.sql_password)/g' $schemaBuildName
+	sed -i "s/127.0.0.1/${server}/g" $schemaBuildName
+	sed -i "s/default_password/${sql_password}/g" $schemaBuildName
 
 cd /usr/local/HammerDB-3.1/
 ./hammerdbcli <<!
