@@ -677,7 +677,7 @@
         <AdditionalHWConfig>
             <Networking>SRIOV</Networking>
         </AdditionalHWConfig>
-        <files>.\Testscripts\Linux\utils.sh,.\Testscripts\Linux\mysql_setup.sh</files>
+        <files>.\Testscripts\Linux\utils.sh,.\Testscripts\Linux\mysql_setup.sh,.\Testscripts\Linux\hammerdb_setup.sh</files>
         <TestParameters>
             <param>sql_password="mysqlpwd"</param>
             <param>disk_type="raid"</param>

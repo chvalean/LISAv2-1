@@ -53,14 +53,14 @@ source /root/$schemaBuildName
 
 		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
 			-username $superUser -password $password -command "chmod +x *.sh" | Out-Null
-		Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
-			-username $superUser -password $password -command "./setupDB.sh" -runMaxAllowedTime 3600 | Out-Null
+		$testJob = Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
+			-username $superUser -password $password -command "./setupDB.sh" -runMaxAllowedTime 3600 `
+			-ignoreLinuxExitCode | Out-Null
 		#endregion
-		if (-not $?) {
-			Write-LogErr "Unable to load the HammerDB database in MySQL!"
-			$currentTestResult.TestResult = Get-FinalResultHeader -resultarr "FAIL"
-			return $currentTestResult
-		}
+	#region MONITOR TEST
+	while ((Get-Job -Id $testJob).State -eq "Running") {
+		Wait-Time -seconds 20
+	}
 	} catch {
 		Write-LogErr "Exception during HammerDB setup."
 		return $false
@@ -166,8 +166,40 @@ collect_VM_properties
 			return $testResult
 		}
 
-		Install-Configure-HammerDB
+		# Install-Configure-HammerDB
+#region INSTALL CONFIGURE MySQL
+$install_configure_hammerdb = @"
+cd /root/
+./hammerdb_setup.sh > hammerdbConsoleLogs.txt 2>&1
+. utils.sh
+collect_VM_properties
+"@
+		Set-Content "$LogDir\StarthammerdbSetup.sh" $install_configure_hammerdb
+		Copy-RemoteFiles -uploadTo $serverVMData.PublicIP -port $serverVMData.SSHPort `
+			-files "$LogDir\StarthammerdbSetup.sh" -username $superUser -password $password -upload
 
+		Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
+			-username $superUser -password $password -command "chmod +x *.sh" | Out-Null
+		$testJob = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
+			-username $superUser -password $password -command "./StarthammerdbSetup.sh" -RunInBackground
+		#endregion
+
+		#region MONITOR INSTALL CONFIGURE MySQL server
+		while ((Get-Job -Id $testJob).State -eq "Running") {
+			$currentStatus = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
+				-username $superUser -password $password -command "tail -2 hammerdbConsoleLogs.txt | head -1"
+			Write-LogInfo "Current Test Status : $currentStatus"
+			Wait-Time -seconds 30
+		}
+
+		$mysqlStatus = Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
+			-username $superUser -password $password -command "cat /root/state.txt"
+		$testResult = Get-TestStatus $mysqlStatus
+		if ($testResult -ne "PASS") {
+			Copy-RemoteFiles -downloadFrom $serverVMData.PublicIP -port $serverVMData.SSHPort `
+				-username $superUser -password $password -download -downloadTo $LogDir -files "*.txt, *.log"
+			return $testResult
+		}
 	} catch {
 		$ErrorMessage =  $_.Exception.Message
 		$ErrorLine = $_.InvocationInfo.ScriptLineNumber
