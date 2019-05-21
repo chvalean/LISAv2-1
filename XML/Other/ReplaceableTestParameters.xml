@@ -54,6 +54,18 @@ Scenario 2 : You need to run all the performance tests quickly.
 		<ReplaceWith>dpdk-latest</ReplaceWith>
 	</Parameter>
 	<Parameter>
+		<ReplaceThis>NFF_GO_SOURCE_URL</ReplaceThis>
+		<ReplaceWith>https://github.com/intel-go/nff-go.git</ReplaceWith>
+	</Parameter>
+	<Parameter>
+		<ReplaceThis>NFF_GO_SOURCE_BRANCH</ReplaceThis>
+		<ReplaceWith>master</ReplaceWith>
+	</Parameter>
+	<Parameter>
+		<ReplaceThis>NFF_GO_ENV_SOURCE_URL</ReplaceThis>
+		<ReplaceWith>https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz</ReplaceWith>
+	</Parameter>
+	<Parameter>
 		<ReplaceThis>NTTTCP_RUNTIME_IN_SECONDS</ReplaceThis>
 		<ReplaceWith>300</ReplaceWith>
 	</Parameter>
@@ -273,6 +285,10 @@ Scenario 2 : You need to run all the performance tests quickly.
 		<ReplaceWith>300</ReplaceWith>
 	</Parameter>
 	<Parameter>
+		<ReplaceThis>NESTED_NTTTCP_TCP_CONNECTIONS</ReplaceThis>
+		<ReplaceWith>(1 2 4 8 16 32 64 128 256 512 1024 2048 4096)</ReplaceWith>
+	</Parameter>
+	<Parameter>
 		<ReplaceThis>OPENSUSE_DOWNLOAD_URL</ReplaceThis>
 		<ReplaceWith>http://download.opensuse.org/repositories/Kernel:/stable/standard/</ReplaceWith>
 	</Parameter>
@@ -477,6 +493,10 @@ Scenario 2 : You need to run all the performance tests quickly.
 		<!-- mlnxofed version which is installed from LIS for 7.3 and 7.4 -->
 		<ReplaceThis>EXPECTED_MLNX_VERSION</ReplaceThis>
 		<ReplaceWith>4.5-0.0.8</ReplaceWith>
+	</Parameter>
+	<Parameter>
+		<ReplaceThis>NVME_VERSION</ReplaceThis>
+		<ReplaceWith>v1.8.1</ReplaceWith>
 	</Parameter>
 	<Parameter>
 		<ReplaceThis>HAMMERDB_URL</ReplaceThis>

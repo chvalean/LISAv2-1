@@ -326,7 +326,7 @@
             <param>TestDelay=10</param>
             <param>MaxTimeDiff=1.0</param>
         </TestParameters>
-        <Platform>Azure,HyperV</Platform>
+        <Platform>HyperV</Platform>
         <Category>Functional</Category>
         <Area>CORE</Area>
         <Tags>timesync</Tags>
@@ -497,7 +497,6 @@
         <testScript>verify_vmbus_heartbeat_properties.sh</testScript>
         <files>.\Testscripts\Linux\verify_vmbus_heartbeat_properties.sh,.\Testscripts\Linux\utils.sh</files>
         <setupType>OneVM</setupType>
-        <OverrideVMSize>Standard_A3</OverrideVMSize>
         <Platform>Azure</Platform>
         <Category>Functional</Category>
         <Area>LIS</Area>
