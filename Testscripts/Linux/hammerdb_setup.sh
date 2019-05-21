@@ -51,10 +51,11 @@ function install_hammerdb () {
 	sed -i "s/default_password/${sql_password}/g" $schemaBuildName
 
 cd /usr/local/HammerDB-3.1/
-./hammerdbcli <<!
+./hammerdbcli <<!>> setup.output 2>&1
 source /root/$schemaBuildName
 !
-	check_exit_status "generate test DB status" "exit"
+	#check_exit_status "generate test DB status" "exit"
+	echo "BASH SCRIPT AFTER BUILD.."
 	sleep 5
 }
 
