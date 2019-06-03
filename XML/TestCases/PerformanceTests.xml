@@ -680,7 +680,7 @@
         <files>.\Testscripts\Linux\utils.sh,.\Testscripts\Linux\mysql_setup.sh,.\Testscripts\Linux\hammerdb_setup.sh</files>
         <TestParameters>
             <param>sql_password="mysqlpwd"</param>
-            <param>disk_type="raid"</param>
+            <param>disk_type="nvme"</param>
             <param>filesystem="xfs"</param>
             <param>hammerURL=HAMMERDB_URL</param>
             <param>hammerPKG=HAMMERDB_PACKAGE</param>
