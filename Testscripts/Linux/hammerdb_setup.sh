@@ -53,10 +53,9 @@ function install_hammerdb () {
 cd /usr/local/HammerDB-3.1/
 ./hammerdbcli <<!>> setup.output 2>&1
 source /root/$schemaBuildName
-!
-	#check_exit_status "generate test DB status" "exit"
-	echo "BASH SCRIPT AFTER BUILD.."
-	sleep 5
+! &
+
+wait < <(jobs -p)
 }
 
 LogMsg "Starting HammerDB setup"
